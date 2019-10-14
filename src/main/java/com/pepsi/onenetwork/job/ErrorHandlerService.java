@@ -14,7 +14,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pepsi.onenetwork.configuration.ErrorHandlerConfiguration;
+import com.pepsi.onenetwork.constant.ErrorHandlerConstants;
 import com.pepsi.onenetwork.model.ConnectorServiceRequestModel;
 import com.pepsi.onenetwork.model.ErrorHandlerModel;
 import com.pepsi.onenetwork.util.ErrorHandlerUtil;
@@ -50,26 +52,28 @@ public class ErrorHandlerService {
 	public void postRetryRequestDetailsForConnectorService()
 	{
 		String dataServiceResponse = restTemplateUtil.getRetryRequestsFromDataService();
+		ObjectMapper mapper = new ObjectMapper();
 		if(dataServiceResponse != null)
 		{
-			List<ConnectorServiceRequestModel> requestList = errorHandlerUtil.convertFromJsonToList(dataServiceResponse);
-			if(requestList.size() > 0)
+			List<ErrorHandlerModel> retryRequestList = errorHandlerUtil.convertFromJsonToList(dataServiceResponse);
+			if(retryRequestList.size() > 0)
 			{
-				for(ConnectorServiceRequestModel model : requestList)
+				for(ErrorHandlerModel errorHandlerModel : retryRequestList)
 				{
 					try {
-						ResponseEntity<String> connectorResponseEntity = restTemplateUtil.postRetryRequestToConnectorService(model);
-						ErrorHandlerModel errorHandlerModel = new ErrorHandlerModel();
-						errorHandlerModel.setReferenceId(model.getId());
-						errorHandlerModel.setRetriesLeft(Integer.parseInt(config.getDefaultRetryCount()));
-						if(connectorResponseEntity.getStatusCode().is2xxSuccessful())
+						ConnectorServiceRequestModel connectorModel = mapper.readValue(errorHandlerModel.getConnectorServiceRequest(), ConnectorServiceRequestModel.class);
+						ResponseEntity<String> connectorServiceResponseEntity = restTemplateUtil.postRetryRequestToConnectorService(connectorModel);
+						errorHandlerModel.setRetriesLeft(errorHandlerModel.getRetriesLeft()-1);
+						if(connectorServiceResponseEntity.getStatusCode().is2xxSuccessful())
 						{
-							
+							errorHandlerModel.setProcessStatus(ErrorHandlerConstants.RETRY_REQUEST_SUCCESS);
 						}
 						else
 						{
-							
+							errorHandlerModel.setProcessStatus(ErrorHandlerConstants.RETRY_REQUEST_FAILURE);
 						}
+						ResponseEntity<String> dataServiceResponseEntity = restTemplateUtil.updateRetryRequestDetailsToDataService();
+						
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();

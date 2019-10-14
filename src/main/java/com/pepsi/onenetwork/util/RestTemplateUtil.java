@@ -51,9 +51,9 @@ public class RestTemplateUtil {
 		return responseBody;
 	}
 	
-	public String updateRetryRequestDetailsToDataService()
+	public ResponseEntity<String> updateRetryRequestDetailsToDataService()
 	{
-		
+		return null;
 	}
 	
 	public ResponseEntity<String> postRetryRequestToConnectorService(ConnectorServiceRequestModel connectorRequestModel)
