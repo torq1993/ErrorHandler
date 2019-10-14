@@ -14,13 +14,18 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import com.pepsi.onenetwork.configuration.ErrorHandlerConfiguration;
 import com.pepsi.onenetwork.model.ConnectorServiceRequestModel;
+import com.pepsi.onenetwork.model.ErrorHandlerModel;
 import com.pepsi.onenetwork.util.ErrorHandlerUtil;
 import com.pepsi.onenetwork.util.RestTemplateUtil;
 
 @Component
 public class ErrorHandlerService {
 
+	@Autowired
+	ErrorHandlerConfiguration config;
+	
 	@Autowired
 	ErrorHandlerUtil errorHandlerUtil;
 	
@@ -54,7 +59,17 @@ public class ErrorHandlerService {
 				{
 					try {
 						ResponseEntity<String> connectorResponseEntity = restTemplateUtil.postRetryRequestToConnectorService(model);
-						
+						ErrorHandlerModel errorHandlerModel = new ErrorHandlerModel();
+						errorHandlerModel.setReferenceId(model.getId());
+						errorHandlerModel.setRetriesLeft(Integer.parseInt(config.getDefaultRetryCount()));
+						if(connectorResponseEntity.getStatusCode().is2xxSuccessful())
+						{
+							
+						}
+						else
+						{
+							
+						}
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();

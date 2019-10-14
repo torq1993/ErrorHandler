@@ -7,4 +7,8 @@ import lombok.Setter;
 @Setter
 public class ErrorHandlerModel {
 
+	String referenceId;
+	String ConnectorServiceRequest;
+	String processStatus;
+	int retriesLeft;
 }
